@@ -56,3 +56,6 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Probe AI Horde -> anonymous job finished in ~104s locally; live queue ~250-550 deep, ETA unreliable.
 - Forced-fallback live test -> call 1 "done provider=pollinations"; call 2 "pending provider=horde"; followed job -> "DONE after ~420s -> /api/files/....webp (image/webp, 33436 bytes)".
 - Live fast path also re-tested -> "200 image/jpeg 45517 bytes".
+- Probed Hugging Face FLUX.1-schnell (`/gradio_api/call/infer`) -> run 1 2219ms, run 2 3800ms, image/webp, no key.
+- Added HF FLUX.1-schnell as the primary keyless provider (then Pollinations, then Horde) -> build "✓ Compiled successfully".
+- Live 4 consecutive generations -> "#1 DONE pollinations 6184ms / #2 huggingface 6061ms / #3 huggingface 5948ms / #4 huggingface 4781ms" (all image/jpeg or image/webp).
