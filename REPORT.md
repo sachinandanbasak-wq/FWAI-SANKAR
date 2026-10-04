@@ -85,8 +85,12 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
   - The admin link is removed from the public navigation; `/admin` is reached by its URL + password.
   - `app/admin/layout.tsx` sets `robots: noindex`; `app/robots.ts` disallows `/admin` and `/api/admin/`.
   - `/api/admin/login` rate-limits attempts (8 per 10 min per IP, best-effort) and delays failures 500 ms.
-  - Password rotated in Vercel. evidence: home `href="/admin"` False; robots.txt "Disallow: /admin";
-    `/admin` 200 with noindex; old password → 401; new password → 200; admin orders listed (4).
+  - Password rotated in Vercel (value not recorded in this public repo). evidence: home `href="/admin"`
+    False; robots.txt "Disallow: /admin"; `/admin` 200 with noindex; old password → 401; new password →
+    200; admin orders listed.
+  - **Operational lesson:** changing `ADMIN_PASSWORD` (or any env var) requires a **fresh build**;
+    `vercel deploy` can reuse a cached build and keep the old value. Use `vercel deploy --prod --force`.
+    Observed directly: after a normal redeploy the old password still worked; after `--force` it stopped.
   - NOTE: hiding the link and noindex are *obscurity*, not access control. The real gate is the
     password on the API; the admin API returns 401 without a valid signed cookie.
 
