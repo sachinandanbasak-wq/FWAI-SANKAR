@@ -9,6 +9,12 @@
 //
 // Both return image bytes; the caller stores them.
 
+// Primary provider: a public Hugging Face Space running FLUX.1-schnell.
+// Free, no key, fast (a few seconds), and works from datacenter IPs. Spaces can
+// sleep or rate-limit, so failures fall through to the providers below.
+const HF_SPACE = process.env.HF_SPACE || "black-forest-labs-flux-1-schnell";
+const HF_BASE = `https://${HF_SPACE}.hf.space`;
+
 const HORDE = "https://stablehorde.net/api/v2";
 const HORDE_KEY = process.env.HORDE_API_KEY || "0000000000"; // anonymous
 const AGENT = "sweet-ginger-studio:1.0";
@@ -32,6 +38,47 @@ function pollinationsUrl(prompt: string, seed: number): string {
 }
 
 export type ImageBytes = { bytes: Buffer; contentType: string };
+
+export async function tryHuggingFace(
+  prompt: string,
+  timeoutMs = 45000
+): Promise<{ ok: true; image: ImageBytes } | { ok: false; status: number }> {
+  try {
+    const submit = await fetch(`${HF_BASE}/gradio_api/call/infer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: [prompt, 0, true, 1024, 1024, 4] }),
+      signal: AbortSignal.timeout(15000),
+      cache: "no-store",
+    });
+    if (!submit.ok) return { ok: false, status: submit.status };
+    const sub = await submit.json();
+    const eventId = sub?.event_id;
+    if (!eventId) return { ok: false, status: 502 };
+
+    const ev = await fetch(`${HF_BASE}/gradio_api/call/infer/${eventId}`, {
+      signal: AbortSignal.timeout(timeoutMs),
+      cache: "no-store",
+    });
+    if (!ev.ok) return { ok: false, status: ev.status };
+    const text = await ev.text();
+
+    const m =
+      text.match(/"url":\s*"([^"]+)"/) || text.match(/"path":\s*"([^"]+)"/);
+    if (!m) return { ok: false, status: 502 };
+    let url = m[1].replace(/\\\//g, "/");
+    if (!url.startsWith("http")) url = `${HF_BASE}/gradio_api/file=${url}`;
+
+    const img = await fetch(url, { signal: AbortSignal.timeout(20000), cache: "no-store" });
+    if (!img.ok) return { ok: false, status: img.status };
+    const contentType = img.headers.get("content-type") || "image/webp";
+    const bytes = Buffer.from(await img.arrayBuffer());
+    if (bytes.length < 1000) return { ok: false, status: 502 };
+    return { ok: true, image: { bytes, contentType } };
+  } catch {
+    return { ok: false, status: 0 };
+  }
+}
 
 export async function tryPollinations(
   prompt: string,

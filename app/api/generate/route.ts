@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { STYLE, hordeSubmit, tryPollinations } from "@/lib/ai";
+import { STYLE, hordeSubmit, tryHuggingFace, tryPollinations } from "@/lib/ai";
 import { extForContentType, saveBytes } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -34,6 +34,18 @@ export async function POST(req: NextRequest) {
 
   const fullPrompt = `${parsed.data.prompt}. ${STYLE}`;
 
+  // 1. Fast, keyless: FLUX.1-schnell on a public Hugging Face Space.
+  const hf = await tryHuggingFace(fullPrompt);
+  if (hf.ok) {
+    const name = await saveBytes(hf.image.bytes, extForContentType(hf.image.contentType));
+    return NextResponse.json({
+      status: "done",
+      url: `/api/files/${name}`,
+      provider: "huggingface",
+    });
+  }
+
+  // 2. Fast when quota allows: Pollinations free model.
   const fast = await tryPollinations(fullPrompt);
   if (fast.ok) {
     const name = await saveBytes(fast.image.bytes, extForContentType(fast.image.contentType));
@@ -44,7 +56,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Fallback to the free, no-key queue.
+  // 3. Free but queued: AI Horde, polled by the client.
   const sub = await hordeSubmit(fullPrompt);
   if (!sub.ok) {
     return NextResponse.json(
