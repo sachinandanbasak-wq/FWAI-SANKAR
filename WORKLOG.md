@@ -1,0 +1,32 @@
+# WORKLOG — Sweet Ginger Design Studio
+
+One line per slice: what I did -> the command I ran -> what it actually printed.
+
+- Wrote PRD / TECH-STACK / IMPLEMENTATION-PLAN -> (authored files) -> three documents in the project folder.
+- Scaffolded Next.js 14 + Tailwind + Konva + Prisma project -> (authored files) -> package.json, tsconfig, prisma/schema.prisma, app/, lib/, components/.
+- Installed dependencies -> `npm.cmd install` -> "added 161 packages, and audited 162 packages in 2m" (12 vulnerabilities reported by npm; see REPORT).
+- Generated Prisma client -> `npx.cmd prisma generate` -> "Generated Prisma Client (v6.1.0) to .\node_modules\@prisma\client in 319ms".
+- Pushed schema -> `npx.cmd prisma db push` -> "SQLite database dev.db created ... Your database is now in sync with your Prisma schema. Done in 142ms."
+- Seeded data -> `node prisma/seed.mjs` -> "Seeded 3 products, 13 settings. ALL PRICES ARE DUMMY PLACEHOLDERS — replace before launch."
+- Unit tests -> `npx.cmd vitest run` -> "Test Files 2 passed (2) / Tests 23 passed (23)". After adding geometry tests: "Test Files 3 passed (3) / Tests 29 passed (29)".
+- Production build -> `npm.cmd run build` -> "✓ Compiled successfully" and all 15 routes listed.
+- Homepage live -> `GET http://localhost:3000/` -> "200" and "home contains product name: yes".
+- Products API live -> `GET /api/products` -> "200, count=3 ... colors=8, sizes=S,M,L,XL,XXL, tiers=3 ... printFront: 11in x 14in".
+- Studio page live -> `GET /studio/crew-neck-tshirt` -> "200" and canvas loader present.
+- Rule 4 (empty design) -> `POST /api/orders` with empty design -> "400 {"error":"Add text or artwork before ordering. An order cannot be placed without a design."}"
+- Rule 4 (bad phone) -> `POST /api/orders` phone=12345 -> "400 {"error":"Enter a valid 10-digit Indian mobile number ..."}"
+- Rule 3 (bulk price) -> `POST /api/orders` sizes S10 M25 L25 XL10 -> "200 ... totalPaise":2023000" = 70 x ₹289 (50+ tier).
+- Persistence -> `node scripts/db-report.mjs` -> "order count: 1 ... qty=70 / unit=28900 / design front=1 back=0" (the rejected empty order was NOT saved).
+- Upload accept/reject -> `curl -F file=@tiny.png -F kind=artwork /api/uploads` -> "200 {"url":"/api/files/...png"}"; `.txt` -> "400 That file type is not supported..."; `GET` the file -> "200 content-type=image/png bytes=70".
+- Admin gate -> `GET /api/admin/orders` -> "401"; wrong password -> "401"; right password -> "200 {"ok":true}".
+- Admin list + status -> login, `GET ?status=ALL` -> "orders=1"; `PATCH {status:PRINTED}` -> "200"; `GET ?status=PRINTED` -> "orders=1 firstStatus=PRINTED"; invalid status -> "400".
+- Extracted print-area clamp into lib/geometry.ts and tested it -> `npx.cmd vitest run` -> geometry.test.ts "6 tests" pass.
+- Re-ran full test suite + build after the refactor -> "Tests 29 passed (29)" and "✓ Compiled successfully".
+- Added customer accounts (Customer table, scrypt password hashing, signed cookie, /account pages) -> `npx.cmd prisma db push` -> "Your database is now in sync with your Prisma schema. Done in 126ms."
+- Account API tests -> register -> "200 {"ok":true}"; `GET /api/account/me` without cookie -> "401"; with cookie -> "200 name=Ravi Event Co"; duplicate register -> "409".
+- Past-order linking -> register with orders@example.com -> `GET /api/account/orders` -> "orders=1 first=SG-20261004-N8SU status=PRINTED label=Printed".
+- Profile edit -> `PATCH /api/account/me` -> "200 savedName=Ravi Sharma"; short address -> "400 Please enter the full delivery address with pincode."
+- New signed-in order -> `POST /api/orders` with customer cookie -> "200 ... totalPaise":79800"; `GET /api/account/orders` -> "orders=2 ... SG-20261004-8IJR status=NEW ... SG-20261004-N8SU status=PRINTED".
+- DB linkage -> prisma check -> "customers: 1 ... orders=SG-20261004-N8SU:PRINTED,SG-20261004-8IJR:NEW / linked orders: 2 guest orders: 0".
+- Account pages live -> `/account/login`, `/account/register`, `/account` -> all "200".
+- Re-ran tests + build with accounts -> "Tests 29 passed (29)" and "✓ Compiled successfully".

@@ -1,0 +1,119 @@
+// Sweet Ginger Design Studio — data model.
+//
+// Money is stored as INTEGER PAISE (never a float). Currency is INR.
+// Design geometry is stored in "print units" where 1 inch = 100 units, so a
+// 12in x 16in print area is 1200 x 1600 units. Print export uses
+// pixelRatio = printDpi / 100.
+//
+// LOCAL BUILD: provider = sqlite so the app runs with zero external services.
+// PRODUCTION  : change provider to "postgresql" and set DATABASE_URL to the
+//               Supabase/Neon connection string. Tables and SQL do not change.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  category         String // tshirt | polo | hoodie | cap
+  description      String
+  retailPricePaise Int
+  active           Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  // Dummy placeholder geometry, all settings-driven and admin-editable.
+  shirtBoxJson     String // { widthIn, heightIn }
+  printFrontJson   String // { xIn, yIn, widthIn, heightIn }
+  printBackJson    String // { xIn, yIn, widthIn, heightIn }
+  colors           Color[]
+  sizes            Size[]
+  tiers            PriceTier[]
+  createdAt        DateTime @default(now())
+}
+
+model Color {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  hex       String
+  sortOrder Int     @default(0)
+}
+
+model Size {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  sortOrder Int     @default(0)
+}
+
+model PriceTier {
+  id             String  @id @default(cuid())
+  productId      String
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty         Int
+  maxQty         Int? // null = no upper bound
+  unitPricePaise Int
+}
+
+model Setting {
+  key   String @id
+  value String // JSON-encoded
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String
+  address      String   @default("")
+  passwordHash String
+  orders       Order[]
+  createdAt    DateTime @default(now())
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerId    String? // null for guest orders; set when a signed-in customer orders
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  customerName  String
+  phone         String
+  email         String
+  address       String
+  notes         String?
+  orderType     String // single | bulk
+  printMethod   String // dtf | embroidery | vinyl
+  status        String      @default("NEW") // NEW | IN_PRODUCTION | PRINTED | SHIPPED
+  subtotalPaise Int
+  totalPaise    Int
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  productSlug     String
+  productName     String
+  colorName       String
+  colorHex        String
+  sizesJson       String // { "S": 10, "M": 25 }
+  unitPricePaise  Int
+  quantity        Int
+  lineTotalPaise  Int
+  designJson      String // { front: DesignElement[], back: DesignElement[] }
+  artworkUrlsJson String? // uploaded artwork URLs used in the design
+  printFrontUrl   String? // transparent PNG at print size, front
+  printBackUrl    String? // transparent PNG at print size, back
+}
