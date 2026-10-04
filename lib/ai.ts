@@ -25,6 +25,23 @@ const POLL_TOKEN = process.env.POLLINATIONS_TOKEN || "";
 export const STYLE =
   "bold screen-print style graphic, solid flat colours, clean edges, centred composition, plain white background, no shirt, no mockup, no photo frame";
 
+/**
+ * Turn a short idea into a clear single-subject print brief.
+ * Without this, a one-word prompt like "tree" makes the model fill the frame
+ * with a repeating pattern. This is deterministic (no second API call), so it
+ * cannot fail or be rate-limited.
+ */
+export function buildImagePrompt(subject: string): string {
+  const s = subject.trim().replace(/\s+/g, " ").replace(/[.\s]+$/, "");
+  return [
+    `A single centred illustration of: ${s}.`,
+    "One subject only, filling the middle of the frame, on a plain white background.",
+    "Not a repeating pattern, not a tile, not a texture, no collage, no multiple copies.",
+    "No text, no letters, no numbers, no watermark, no logo frame, no person wearing it.",
+    STYLE + ".",
+  ].join(" ");
+}
+
 function pollinationsUrl(prompt: string, seed: number): string {
   const params = new URLSearchParams({
     width: "1024",

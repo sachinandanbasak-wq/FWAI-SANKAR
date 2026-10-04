@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  STYLE,
+  buildImagePrompt,
   hordeSubmit,
   translateToEnglish,
   tryHuggingFace,
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   // Prompts may be in any language; the image models want English.
   const english = await translateToEnglish(parsed.data.prompt);
-  const fullPrompt = `${english}. ${STYLE}`;
+  const fullPrompt = buildImagePrompt(english);
 
   // 1. Fast, keyless: FLUX.1-schnell on a public Hugging Face Space.
   const hf = await tryHuggingFace(fullPrompt);
