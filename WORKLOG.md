@@ -61,3 +61,5 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Live 4 consecutive generations -> "#1 DONE pollinations 6184ms / #2 huggingface 6061ms / #3 huggingface 5948ms / #4 huggingface 4781ms" (all image/jpeg or image/webp).
 - AI robustness: client retries the fast providers up to 3x before queueing (`queue=false` on early attempts so no duplicate Horde jobs); HF timeouts trimmed to fit the 60s function limit.
 - Live stress test, 5 consecutive generations -> all DONE: "huggingface 11479ms / 6245ms / 4651ms / 4301ms / pollinations 3766ms".
+- Multilingual prompts: translate to English first (MyMemory with script detection, then Pollinations text, then original). JSON body sent as UTF-8 for the test.
+- Live multilingual test -> "Hindi 'एक लाल कार' usedPrompt='A red car'; Tamil -> 'A blue star'; Bengali -> 'A green tree'; Arabic -> 'Red car.'; English -> unchanged"; all DONE provider=huggingface.

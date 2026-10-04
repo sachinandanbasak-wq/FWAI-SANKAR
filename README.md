@@ -99,6 +99,10 @@ right-hand thumbnails first, then add text/artwork/AI art to that side.
 **AI design:** type a short description in the *Generate a design with AI* panel and press Generate.
 The image goes to whichever side you are on; you can generate as many as you like, on any side.
 
+**Any language:** the prompt can be in Hindi, Tamil, Bengali, Marathi, Arabic, Chinese and more.
+Non-English prompts are translated to English before generating (via MyMemory, then Pollinations
+text). The UI shows what it translated to; English/romanised prompts are used as typed.
+
 How generation works (no key needed), tried in order:
 
 1. **FLUX.1-schnell on a public Hugging Face Space** — free, no key, a few seconds. This is the normal path.

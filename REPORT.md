@@ -65,6 +65,10 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
   - **Fast keyless fix:** added FLUX.1-schnell on a public Hugging Face Space as the primary provider
     (probe: 2.2 s first image, 3.8 s second; live: four consecutive generations all `done` in 4.8–6.2 s,
     providers `huggingface`/`pollinations`). Repeated generation on the same side now works.
+  - **Any language:** non-English prompts are translated to English first (MyMemory with script
+    detection for Indian/Arabic/CJK scripts, then Pollinations text, then the original as a last
+    resort). Live: Hindi "एक लाल कार" → `usedPrompt='A red car'`; Tamil → "A blue star"; Bengali →
+    "A green tree"; Arabic → "Red car."; English unchanged. All generated successfully.
   - **Robustness:** the client retries the fast providers up to 3× before falling to the queue, so a
     momentarily busy Space no longer drops straight to the slow path. Live stress test, 5 consecutive
     generations → all `done` in 3.8–11.5 s (four `huggingface`, one `pollinations`).
