@@ -38,3 +38,5 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Deployed -> `vercel deploy --prod --yes` -> "✓ Ready in 1m", "Aliased https://sweet-ginger-studio-pied.vercel.app".
 - Disabled deployment protection -> PATCH `{"ssoProtection":null}`.
 - Live verification -> site "200 products=3"; upload stored+served "200 image/png bytes=70"; order "200 totalPaise:987000" (30 x ₹329 tier); pages /,/studio,/cart,/checkout,/account/login,/admin/login all "200"; admin login "200"; admin orders "2"; status update "200 IN_PRODUCTION".
+- Redesigned the studio to the Design Lab layout (left tool rail, "How do you want to start?" panel, front/back thumbnails, zoom, bottom product/colour + Get Price bar) -> `npm.cmd run build` -> "✓ Compiled successfully"; tests -> "Tests 29 passed (29)".
+- Redeployed -> `vercel deploy --prod --yes` -> "Aliased https://sweet-ginger-studio-pied.vercel.app"; live studio page -> "200"; checks -> starter heading True, Add Text True, "Get price / Add to cart" True, Fit True, Print area True; /api/products -> "200 products=3".
