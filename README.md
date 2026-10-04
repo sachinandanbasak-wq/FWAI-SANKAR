@@ -96,11 +96,17 @@ npm.cmd run start
 **Four print areas:** front, back, **left sleeve** and **right sleeve**. Pick the side in the
 right-hand thumbnails first, then add text/artwork/AI art to that side.
 
-**AI design:** in the *Generate a design with AI* panel, type a short description (for example
-"a bold tiger head logo in orange and black") and press Generate. The image is added to whichever
-side you are on, and can be moved, resized and rotated like any artwork. AI images come from
-Pollinations (no API key needed); to use a paid provider, add its key and branch in
-`app/api/generate/route.ts`.
+**AI design:** type a short description in the *Generate a design with AI* panel and press Generate.
+The image goes to whichever side you are on; you can generate as many as you like, on any side.
+
+How generation works (no key needed to start):
+
+- **Fast path — Pollinations free model.** Answers in seconds, but a cloud host (Vercel) gets a small
+  free allowance per IP; after that it returns **402**.
+- **Fallback — AI Horde.** Also free and keyless, but queued (a few minutes anonymously). The job runs
+  in the background: keep designing and the image is added when it is ready (a note shows the queue).
+- **To make it fast and effectively unlimited:** set a free `POLLINATIONS_TOKEN` (register at
+  pollinations.ai) or a paid provider key as an environment variable — see `DEPLOY.md`.
 
 ### Customer accounts (profile and order tracking)
 

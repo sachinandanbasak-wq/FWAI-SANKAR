@@ -52,3 +52,7 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Live delete verification -> studio "200"; "DELETE UI present in live bundle: app/studio/[slug]/page-....js"; AI still "200".
 - Hid the admin link from the public nav; added noindex layout for /admin, robots.txt disallow, and a login rate limit; rotated ADMIN_PASSWORD in Vercel -> `npm.cmd run build` -> "✓ Compiled successfully", tests "31 passed"; deploy -> "Aliased https://sweet-ginger-studio-pied.vercel.app".
 - Live admin verification -> home `href="/admin"` False (Account/Cart still True); robots.txt "Disallow: /admin"; `/admin` 200 with noindex; old password 401; new password 200; admin orders=4.
+- Diagnosed AI 402: Pollinations free model list is `["sana"]`; the default model is token-gated and a cloud IP gets one free image then 402. Fix: request free `sana`, retry, and add an AI Horde fallback with client-side polling (non-blocking).
+- Probe AI Horde -> anonymous job finished in ~104s locally; live queue ~250-550 deep, ETA unreliable.
+- Forced-fallback live test -> call 1 "done provider=pollinations"; call 2 "pending provider=horde"; followed job -> "DONE after ~420s -> /api/files/....webp (image/webp, 33436 bytes)".
+- Live fast path also re-tested -> "200 image/jpeg 45517 bytes".

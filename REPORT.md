@@ -54,6 +54,18 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
     "200 ... 39044 bytes"; right-sleeve order → "200 totalPaise:79800"; admin → "rightSleevePrintUrl
     set: True, right=1". Tests 31 passed; build ✓.
 
+**AI generation resilience: DONE (with a documented limit)**
+  - Cause of the user's error found: Pollinations' free tier exposes only the `sana` model; the default
+    model is token-gated, so a Vercel (datacenter) IP gets one free image then **402**.
+  - Fix: request the free `sana` model, retry, and fall back to **AI Horde** (free, keyless) with the
+    job polled by the client so generation is non-blocking and repeatable on any side.
+  - evidence (live): forced fallback -> call 1 `done provider=pollinations`; call 2 `pending provider=horde`;
+    job followed -> `DONE after ~420s -> /api/files/...webp (image/webp, 33436 bytes)`; fast path re-test
+    -> `200 image/jpeg 45517 bytes`.
+  - **Honest limit:** there is no fast, unlimited, keyless image generator. The fast path is a small
+    free allowance; the free fallback is queued (minutes). For fast/unlimited, set a free
+    `POLLINATIONS_TOKEN` or a paid key — the code already supports both.
+
 **Admin privacy: DONE**
   - The admin link is removed from the public navigation; `/admin` is reached by its URL + password.
   - `app/admin/layout.tsx` sets `robots: noindex`; `app/robots.ts` disallows `/admin` and `/api/admin/`.

@@ -29,6 +29,12 @@ What is left is the deploy itself, which needs the owner's Vercel account.
 | `DATABASE_URL` | the session-pooler URI above |
 | `ADMIN_PASSWORD` | a real admin password (not the default) |
 | `SESSION_SECRET` | a long random string |
+| `POLLINATIONS_TOKEN` | *optional but recommended* — free token from pollinations.ai; makes AI generation fast and generous |
+| `POLLINATIONS_MODEL` | *optional* — defaults to the free `sana` model |
+| `HORDE_API_KEY` | *optional* — free key from stablehorde.net; raises the AI fallback queue priority |
+
+Without a token, AI generation still works: the fast path handles the first request, then the free
+AI Horde fallback queues (a few minutes) and the image is added when ready.
 
 ## 3. Deploy
 
