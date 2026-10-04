@@ -365,36 +365,52 @@ export default function StudioClient({
     const targetSide: Side = side;
     setAiBusy(true);
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage({ kind: "error", text: data.error ?? "Generation failed. Please try again." });
-        return;
-      }
+      // Try the fast providers a few times before using the slow free queue.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const isLast = attempt === 2;
+        if (attempt > 0) {
+          setMessage({ kind: "info", text: "The AI service was busy — trying again…" });
+          await new Promise((r) => setTimeout(r, 1200));
+        }
 
-      if (data.status === "done") {
-        addGeneratedImageAt(targetSide, data.url, label);
-        setMessage({
-          kind: "info",
-          text: `Generated and placed on the ${SIDE_LABELS[targetSide].toLowerCase()}. Generate as many as you like, on any side.`,
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: aiPrompt, queue: isLast }),
         });
-        return;
-      }
+        const data = await res.json();
+        if (!res.ok) {
+          setMessage({ kind: "error", text: data.error ?? "Generation failed. Please try again." });
+          return;
+        }
 
-      // Busy: queue it and keep working. The image appears when ready.
-      const jobId = data.jobId as string;
-      setPendingAi((p) => [...p, { id: jobId, label, side: targetSide }]);
+        if (data.status === "done") {
+          addGeneratedImageAt(targetSide, data.url, label);
+          setMessage({
+            kind: "info",
+            text: `Generated and placed on the ${SIDE_LABELS[targetSide].toLowerCase()}. Generate as many as you like, on any side.`,
+          });
+          return;
+        }
+
+        if (data.status === "pending" && data.jobId) {
+          const jobId = data.jobId as string;
+          setPendingAi((p) => [...p, { id: jobId, label, side: targetSide }]);
+          setMessage({
+            kind: "info",
+            text: `The fast AI service is busy, so "${label}" is queued. Keep designing — it will be added to the ${SIDE_LABELS[
+              targetSide
+            ].toLowerCase()} when ready.`,
+          });
+          void pollJob(jobId, label, targetSide);
+          return;
+        }
+        // status === "busy": loop and retry the fast providers.
+      }
       setMessage({
-        kind: "info",
-        text: `"${label}" is being made in the free queue. Keep designing — it will be added to the ${SIDE_LABELS[
-          targetSide
-        ].toLowerCase()} when ready.`,
+        kind: "error",
+        text: "The AI service is very busy right now. Please press Generate again in a moment.",
       });
-      void pollJob(jobId, label, targetSide);
     } catch {
       setMessage({ kind: "error", text: "Generation failed. Please check your connection and try again." });
     } finally {

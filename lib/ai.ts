@@ -41,14 +41,15 @@ export type ImageBytes = { bytes: Buffer; contentType: string };
 
 export async function tryHuggingFace(
   prompt: string,
-  timeoutMs = 45000
+  submitMs = 8000,
+  eventMs = 34000
 ): Promise<{ ok: true; image: ImageBytes } | { ok: false; status: number }> {
   try {
     const submit = await fetch(`${HF_BASE}/gradio_api/call/infer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data: [prompt, 0, true, 1024, 1024, 4] }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(submitMs),
       cache: "no-store",
     });
     if (!submit.ok) return { ok: false, status: submit.status };
@@ -57,7 +58,7 @@ export async function tryHuggingFace(
     if (!eventId) return { ok: false, status: 502 };
 
     const ev = await fetch(`${HF_BASE}/gradio_api/call/infer/${eventId}`, {
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.timeout(eventMs),
       cache: "no-store",
     });
     if (!ev.ok) return { ok: false, status: ev.status };

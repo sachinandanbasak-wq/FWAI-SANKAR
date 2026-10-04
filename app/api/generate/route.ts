@@ -13,6 +13,9 @@ const bodySchema = z.object({
     .trim()
     .min(3, "Please describe the design you want (at least a few words).")
     .max(300, "Please keep the description under 300 characters."),
+  // The client retries the fast providers a few times. Only the final attempt
+  // is allowed to enqueue the slow free queue, to avoid duplicate queued jobs.
+  queue: z.boolean().optional().default(true),
 });
 
 // Fast path: Pollinations. Slow fallback: AI Horde (queued, polled by client).
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Fast when quota allows: Pollinations free model.
-  const fast = await tryPollinations(fullPrompt);
+  const fast = await tryPollinations(fullPrompt, 1, 12000);
   if (fast.ok) {
     const name = await saveBytes(fast.image.bytes, extForContentType(fast.image.contentType));
     return NextResponse.json({
@@ -54,6 +57,12 @@ export async function POST(req: NextRequest) {
       url: `/api/files/${name}`,
       provider: "pollinations",
     });
+  }
+
+  // Fast providers are busy. If this is a retry from the client, do not queue
+  // yet — let the client try again.
+  if (!parsed.data.queue) {
+    return NextResponse.json({ status: "busy" });
   }
 
   // 3. Free but queued: AI Horde, polled by the client.
