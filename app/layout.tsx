@@ -42,12 +42,8 @@ export default function RootLayout({
               >
                 Account
               </Link>
-              <Link
-                href="/admin"
-                className="text-stone-500 hover:text-ginger-dark"
-              >
-                Admin
-              </Link>
+              {/* No admin link here on purpose: the admin area is reached by its
+                  private URL and password only. */}
             </nav>
           </div>
         </header>
