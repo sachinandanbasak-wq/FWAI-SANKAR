@@ -142,7 +142,9 @@ export default function StudioClient({
 
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
-  const [aiStatus, setAiStatus] = useState<string | null>(null);
+  const [pendingAi, setPendingAi] = useState<
+    { id: string; label: string; side: Side; queue?: number; waitTime?: number }[]
+  >([]);
 
   const printArea = printAreaFor(product, side);
   const pw = printArea.widthIn * UNITS_PER_INCH;
@@ -325,9 +327,36 @@ export default function StudioClient({
     setSelectedId(el.id);
   }
 
+  // Poll one free-queue job in the background and add the image when ready.
+  async function pollJob(jobId: string, label: string, targetSide: Side) {
+    for (let i = 0; i < 300; i++) {
+      await new Promise((r) => setTimeout(r, 4000));
+      try {
+        const sd = await (
+          await fetch(`/api/generate/status?id=${encodeURIComponent(jobId)}`, { cache: "no-store" })
+        ).json();
+        if (sd.status === "done" && sd.url) {
+          addGeneratedImageAt(targetSide, sd.url, label);
+          setPendingAi((p) => p.filter((j) => j.id !== jobId));
+          setMessage({
+            kind: "info",
+            text: `"${label}" is ready on the ${SIDE_LABELS[targetSide].toLowerCase()}.`,
+          });
+          return;
+        }
+        setPendingAi((p) =>
+          p.map((j) => (j.id === jobId ? { ...j, queue: sd.queue, waitTime: sd.waitTime } : j))
+        );
+      } catch {
+        /* keep polling */
+      }
+    }
+    setPendingAi((p) => p.filter((j) => j.id !== jobId));
+    setMessage({ kind: "error", text: `Could not finish "${label}" from the free queue. Please try again.` });
+  }
+
   async function generateAi() {
     setMessage(null);
-    setAiStatus(null);
     if (aiPrompt.trim().length < 3) {
       setMessage({ kind: "error", text: "Describe the design you want (a few words is enough)." });
       return;
@@ -356,39 +385,20 @@ export default function StudioClient({
         return;
       }
 
-      // Free queue: poll until the image is ready.
+      // Busy: queue it and keep working. The image appears when ready.
       const jobId = data.jobId as string;
-      for (let i = 0; i < 50; i++) {
-        await new Promise((r) => setTimeout(r, 4000));
-        let sd: { status?: string; queue?: number; waitTime?: number } = {};
-        try {
-          sd = await (await fetch(`/api/generate/status?id=${encodeURIComponent(jobId)}`, { cache: "no-store" })).json();
-        } catch {
-          continue;
-        }
-        if (sd.status === "done") {
-          addGeneratedImageAt(targetSide, (sd as { url: string }).url, label);
-          setMessage({
-            kind: "info",
-            text: `Generated on the ${SIDE_LABELS[targetSide].toLowerCase()} (free queue). You can generate more.`,
-          });
-          return;
-        }
-        setAiStatus(
-          sd.queue != null && sd.queue > 0
-            ? `In the free queue — about ${sd.queue} ahead, roughly ${sd.waitTime ?? "?"}s. You can keep editing while you wait.`
-            : "Finishing the image…"
-        );
-      }
+      setPendingAi((p) => [...p, { id: jobId, label, side: targetSide }]);
       setMessage({
-        kind: "error",
-        text: "The free queue is very busy. Please press Generate again in a minute.",
+        kind: "info",
+        text: `"${label}" is being made in the free queue. Keep designing — it will be added to the ${SIDE_LABELS[
+          targetSide
+        ].toLowerCase()} when ready.`,
       });
+      void pollJob(jobId, label, targetSide);
     } catch {
       setMessage({ kind: "error", text: "Generation failed. Please check your connection and try again." });
     } finally {
       setAiBusy(false);
-      setAiStatus(null);
     }
   }
 
@@ -628,8 +638,17 @@ export default function StudioClient({
             <button className="btn-primary mt-3 w-full" onClick={generateAi} disabled={aiBusy}>
               {aiBusy ? "Generating…" : `Generate on ${SIDE_LABELS[side].toLowerCase()}`}
             </button>
-            {aiStatus && (
-              <p className="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-800">{aiStatus}</p>
+            {pendingAi.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {pendingAi.map((j) => (
+                  <li key={j.id} className="rounded bg-amber-50 p-2 text-xs text-amber-800">
+                    Making &ldquo;{j.label}&rdquo; for the {SIDE_LABELS[j.side].toLowerCase()}
+                    {j.queue && j.queue > 0
+                      ? ` — about ${j.queue} ahead, roughly ${j.waitTime ?? "?"}s`
+                      : " — finishing…"}
+                  </li>
+                ))}
+              </ul>
             )}
             <p className="mt-2 text-[11px] text-stone-400">
               Generate as many images as you like; each one is added to the side you are on. AI images
