@@ -158,18 +158,21 @@ Automated checks for rules 3 and 4 (run against the running server) are in `scri
 
 ---
 
-## 7. Going live later (not done here)
+## 7. Deployment (Vercel + Supabase Postgres)
 
-The build is **local-first** on purpose, so it runs and can be proven. To put it online:
+The app now runs on **Postgres** (`prisma/schema.prisma` → `provider = "postgresql"`) and stores
+uploaded artwork and print files **in the database** (`StoredFile` table), so it works on a
+serverless host with an ephemeral filesystem.
 
-1. **Database:** change `provider = "sqlite"` to `"postgresql"` in `prisma/schema.prisma`, set
-   `DATABASE_URL` to a Supabase/Neon Postgres string, run one migration. Tables and SQL do not change.
-2. **File storage:** point `lib/storage.ts` at Supabase Storage or S3 (one small adapter).
-3. **Hosting:** deploy to Vercel or Netlify. Set `ADMIN_PASSWORD` and `SESSION_SECRET` there too —
-   your local `.env` is **not** uploaded.
-4. **Auth:** the customer accounts and the admin gate already work on signed cookies. Before a public
-   launch, add **email verification** (so "claim past orders by email" cannot be abused) and set
-   `ADMIN_PASSWORD` / `SESSION_SECRET` as environment variables on the host.
+Environment variables the app reads (set these in Vercel → Settings → Environment Variables):
 
-**Why not Supabase now:** no Supabase credentials were provided, and an app you cannot run is an app
-you cannot verify. See `REPORT.md` for the exact blocked item.
+| Name | Value |
+|---|---|
+| `DATABASE_URL` | Supabase Postgres URI (session pooler, port 5432 — IPv4) |
+| `ADMIN_PASSWORD` | a real admin password |
+| `SESSION_SECRET` | a long random string |
+
+`.env` is **not** uploaded. Full procedure and the exact unblock steps are in `DEPLOY.md`.
+
+Before a public launch: add **email verification** (so "claim past orders by email" cannot be
+abused), and consider moving files from the database to object storage if volume grows.

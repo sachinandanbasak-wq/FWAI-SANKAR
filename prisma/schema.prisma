@@ -14,7 +14,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -66,6 +66,17 @@ model PriceTier {
 model Setting {
   key   String @id
   value String // JSON-encoded
+}
+
+// Uploaded artwork and exported print files are kept in the database, because
+// serverless hosts (Vercel) have an ephemeral filesystem. Swap this for object
+// storage later without touching the routes.
+model StoredFile {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  contentType String
+  bytes       Bytes
+  createdAt   DateTime @default(now())
 }
 
 model Customer {
