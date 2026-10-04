@@ -33,6 +33,7 @@ type Props = {
   onSelect: (id: string | null) => void;
   onChange: (design: Design) => void;
   editorMode: boolean;
+  zoom?: number;
 };
 
 function useContainerWidth(ref: RefObject<HTMLDivElement>): number {
@@ -90,6 +91,7 @@ export default function StudioCanvas({
   onSelect,
   onChange,
   editorMode,
+  zoom = 1,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -98,8 +100,9 @@ export default function StudioCanvas({
 
   const shirtW = product.shirtBox.widthIn * UNITS_PER_INCH;
   const shirtH = product.shirtBox.heightIn * UNITS_PER_INCH;
-  const scale = width > 0 ? width / shirtW : 0;
-  const displayH = width * (shirtH / shirtW);
+  const scale = width > 0 ? (width / shirtW) * zoom : 0;
+  const stageWidth = width * zoom;
+  const displayH = width * (shirtH / shirtW) * zoom;
 
   const printArea = side === "front" ? product.printFront : product.printBack;
   const pw = printArea.widthIn * UNITS_PER_INCH;
@@ -204,7 +207,7 @@ export default function StudioCanvas({
     <div ref={wrapRef} className="w-full">
       {width > 0 && (
         <Stage
-          width={width}
+          width={stageWidth}
           height={displayH}
           onMouseDown={(e) => {
             if (e.target === e.target.getStage()) onSelect(null);
