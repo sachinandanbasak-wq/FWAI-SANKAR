@@ -37,7 +37,8 @@ export function buildImagePrompt(subject: string): string {
     `A single centred illustration of: ${s}.`,
     "One subject only, filling the middle of the frame, on a plain white background.",
     "Not a repeating pattern, not a tile, not a texture, no collage, no multiple copies.",
-    "No text, no letters, no numbers, no watermark, no logo frame, no person wearing it.",
+    "No text, no letters, no numbers, no watermark, no logo.",
+    "No border, no frame, no outline, no box around the image, no person wearing it.",
     STYLE + ".",
   ].join(" ");
 }
