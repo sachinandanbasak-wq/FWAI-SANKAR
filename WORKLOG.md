@@ -50,3 +50,5 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Added clear delete controls (on-canvas red x, Delete in the settings panel, Delete selected, Clear <side>) -> `npm.cmd run build` -> "✓ Compiled successfully"; tests -> "31 passed".
 - Deployed (first attempt "Error: fetch failed", retried) -> "Aliased https://sweet-ginger-studio-pied.vercel.app".
 - Live delete verification -> studio "200"; "DELETE UI present in live bundle: app/studio/[slug]/page-....js"; AI still "200".
+- Hid the admin link from the public nav; added noindex layout for /admin, robots.txt disallow, and a login rate limit; rotated ADMIN_PASSWORD in Vercel -> `npm.cmd run build` -> "✓ Compiled successfully", tests "31 passed"; deploy -> "Aliased https://sweet-ginger-studio-pied.vercel.app".
+- Live admin verification -> home `href="/admin"` False (Account/Cart still True); robots.txt "Disallow: /admin"; `/admin` 200 with noindex; old password 401; new password 200; admin orders=4.

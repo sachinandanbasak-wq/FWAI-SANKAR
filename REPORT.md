@@ -54,6 +54,15 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
     "200 ... 39044 bytes"; right-sleeve order → "200 totalPaise:79800"; admin → "rightSleevePrintUrl
     set: True, right=1". Tests 31 passed; build ✓.
 
+**Admin privacy: DONE**
+  - The admin link is removed from the public navigation; `/admin` is reached by its URL + password.
+  - `app/admin/layout.tsx` sets `robots: noindex`; `app/robots.ts` disallows `/admin` and `/api/admin/`.
+  - `/api/admin/login` rate-limits attempts (8 per 10 min per IP, best-effort) and delays failures 500 ms.
+  - Password rotated in Vercel. evidence: home `href="/admin"` False; robots.txt "Disallow: /admin";
+    `/admin` 200 with noindex; old password → 401; new password → 200; admin orders listed (4).
+  - NOTE: hiding the link and noindex are *obscurity*, not access control. The real gate is the
+    password on the API; the admin API returns 401 without a valid signed cookie.
+
 **Phase 5 — Optional extras (background removal, saved designs): PARTIAL**
   - Customer accounts — profile (name/phone/email/address, editable) and order history with current
     status: **DONE and verified.** evidence: register → 200; `/api/account/me` without cookie → 401,
