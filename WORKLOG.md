@@ -47,3 +47,6 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Persistence -> `node scripts/db-report.mjs` -> "left_sleeve=1 ... print: leftSleeve=yes".
 - Redeployed AI + sleeves -> `vercel deploy --prod --yes` -> "Aliased https://sweet-ginger-studio-pied.vercel.app".
 - Live AI + sleeves verification -> studio page "200"; markers AI panel True / Left sleeve True / Right sleeve True; live `/api/generate` -> "200 provider=pollinations ... 39044 bytes"; live order with right_sleeve -> "200 ... totalPaise:79800"; admin -> "rightSleevePrintUrl set: True / design sides right=1".
+- Added clear delete controls (on-canvas red x, Delete in the settings panel, Delete selected, Clear <side>) -> `npm.cmd run build` -> "✓ Compiled successfully"; tests -> "31 passed".
+- Deployed (first attempt "Error: fetch failed", retried) -> "Aliased https://sweet-ginger-studio-pied.vercel.app".
+- Live delete verification -> studio "200"; "DELETE UI present in live bundle: app/studio/[slug]/page-....js"; AI still "200".
