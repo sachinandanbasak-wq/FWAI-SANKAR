@@ -30,3 +30,11 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - DB linkage -> prisma check -> "customers: 1 ... orders=SG-20261004-N8SU:PRINTED,SG-20261004-8IJR:NEW / linked orders: 2 guest orders: 0".
 - Account pages live -> `/account/login`, `/account/register`, `/account` -> all "200".
 - Re-ran tests + build with accounts -> "Tests 29 passed (29)" and "✓ Compiled successfully".
+- Switched DB to Supabase Postgres + moved file storage into the DB -> edited prisma/schema.prisma (provider postgresql, StoredFile), rewrote lib/storage.ts.
+- Applied schema to Supabase -> `npx.cmd prisma db push` -> "PostgreSQL database ... at db.lsdofemyjdklkcrzgkax.supabase.co:5432 ... Your database is now in sync ... Done in 4.91s"; seed -> "Seeded 3 products, 13 settings."
+- Local run against Supabase -> `/api/products` -> "200 products=3"; upload -> file stored in Postgres and fetched back "200 image/png bytes=70"; order -> "200 ... totalPaise:2023000"; `scripts/db-report.mjs` -> "order count: 1"; file count -> "stored files in Supabase: 1".
+- Found the pooler region (direct host is IPv6-only) -> `prisma db execute` over candidate poolers -> "FOUND region: aws-0-ap-southeast-1".
+- Created Vercel project + env vars via API -> "created: id=prj_X6w6WQSiU0C4gHC1I7fWDKArOBvh"; "env set: DATABASE_URL / ADMIN_PASSWORD / SESSION_SECRET".
+- Deployed -> `vercel deploy --prod --yes` -> "✓ Ready in 1m", "Aliased https://sweet-ginger-studio-pied.vercel.app".
+- Disabled deployment protection -> PATCH `{"ssoProtection":null}`.
+- Live verification -> site "200 products=3"; upload stored+served "200 image/png bytes=70"; order "200 totalPaise:987000" (30 x ₹329 tier); pages /,/studio,/cart,/checkout,/account/login,/admin/login all "200"; admin login "200"; admin orders "2"; status update "200 IN_PRODUCTION".

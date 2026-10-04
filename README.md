@@ -5,6 +5,9 @@ adds text or artwork, sees it on the real shirt colour, and orders **one piece o
 across sizes** — in the same studio. The admin side lists orders, downloads the artwork and a
 print-ready PNG per side, and moves each order through production.
 
+**Live:** https://sweet-ginger-studio-pied.vercel.app — shop at `/`, admin at `/admin`.
+Database: Supabase Postgres. Files are stored in the `StoredFile` table.
+
 Read the plan first: `PRD.md`, `TECH-STACK.md`, `IMPLEMENTATION-PLAN.md`.
 
 ---

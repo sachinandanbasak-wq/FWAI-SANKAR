@@ -34,6 +34,15 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
     browser (`lib/print-export.ts`) and needs a real browser to prove. The code path is wired into
     checkout; it was not executed in this environment.
 
+**Deployment (Vercel + Supabase Postgres): DONE and verified live**
+  - Live: https://sweet-ginger-studio-pied.vercel.app
+  - Supabase project `lsdofemyjdklkcrzgkax` (region ap-southeast-1); tables pushed and seeded.
+  - Files are stored in the `StoredFile` table because Vercel's filesystem is ephemeral.
+  - evidence (fetched live): `/api/products` → "200 products=3"; upload → stored in Postgres and
+    served back "200 image/png bytes=70"; a 30-piece order → "200 totalPaise:987000" (30 × ₹329,
+    10–49 tier); pages `/`,`/studio/...`,`/cart`,`/checkout`,`/account/login`,`/admin/login` → all 200;
+    admin login → 200, 2 orders listed, status updated to IN_PRODUCTION → 200.
+
 **Phase 5 — Optional extras (AI generation, background removal, saved designs): PARTIAL**
   - Customer accounts — profile (name/phone/email/address, editable) and order history with current
     status: **DONE and verified.** evidence: register → 200; `/api/account/me` without cookie → 401,
