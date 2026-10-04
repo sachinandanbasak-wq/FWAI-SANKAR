@@ -167,8 +167,9 @@ The build is **local-first** on purpose, so it runs and can be proven. To put it
 2. **File storage:** point `lib/storage.ts` at Supabase Storage or S3 (one small adapter).
 3. **Hosting:** deploy to Vercel or Netlify. Set `ADMIN_PASSWORD` and `SESSION_SECRET` there too —
    your local `.env` is **not** uploaded.
-4. **Auth:** the admin password gate stays; add customer accounts only if the optional features
-   (saved designs) are wanted.
+4. **Auth:** the customer accounts and the admin gate already work on signed cookies. Before a public
+   launch, add **email verification** (so "claim past orders by email" cannot be abused) and set
+   `ADMIN_PASSWORD` / `SESSION_SECRET` as environment variables on the host.
 
 **Why not Supabase now:** no Supabase credentials were provided, and an app you cannot run is an app
 you cannot verify. See `REPORT.md` for the exact blocked item.
