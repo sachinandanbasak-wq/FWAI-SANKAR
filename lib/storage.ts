@@ -28,10 +28,17 @@ export async function readBytes(name: string): Promise<Buffer | null> {
   return Buffer.from(row.bytes);
 }
 
+export function extForContentType(contentType: string): string {
+  if (contentType.includes("png")) return ".png";
+  if (contentType.includes("webp")) return ".webp";
+  return ".jpg";
+}
+
 export function contentTypeFor(name: string): string {
   const lower = name.toLowerCase();
   if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".webp")) return "image/webp";
   if (lower.endsWith(".json")) return "application/json";
   return "application/octet-stream";
 }

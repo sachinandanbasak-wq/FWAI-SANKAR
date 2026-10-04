@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { saveBytes } from "@/lib/storage";
+import { STYLE, hordeSubmit, tryPollinations } from "@/lib/ai";
+import { extForContentType, saveBytes } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-// AI image generation.
-//
-// Default provider is Pollinations (https://pollinations.ai), which needs no
-// API key, so the feature works out of the box. To use a paid provider later,
-// add its key as an environment variable and branch here — the rest of the app
-// only cares that this route returns a stored image URL.
-
-const STYLE =
-  "bold screen-print style graphic, solid flat colours, clean edges, centred composition, plain white background, no shirt, no mockup, no photo frame";
 
 const bodySchema = z.object({
   prompt: z
@@ -24,6 +15,7 @@ const bodySchema = z.object({
     .max(300, "Please keep the description under 300 characters."),
 });
 
+// Fast path: Pollinations. Slow fallback: AI Horde (queued, polled by client).
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -41,46 +33,27 @@ export async function POST(req: NextRequest) {
   }
 
   const fullPrompt = `${parsed.data.prompt}. ${STYLE}`;
-  const seed = Math.floor(Math.random() * 1_000_000_000);
-  const url =
-    `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}` +
-    `?width=1024&height=1024&nologo=true&seed=${seed}`;
 
-  let res: Response;
-  try {
-    res = await fetch(url, { signal: AbortSignal.timeout(55000) });
-  } catch {
+  const fast = await tryPollinations(fullPrompt);
+  if (fast.ok) {
+    const name = await saveBytes(fast.image.bytes, extForContentType(fast.image.contentType));
+    return NextResponse.json({
+      status: "done",
+      url: `/api/files/${name}`,
+      provider: "pollinations",
+    });
+  }
+
+  // Fallback to the free, no-key queue.
+  const sub = await hordeSubmit(fullPrompt);
+  if (!sub.ok) {
     return NextResponse.json(
-      { error: "The image service did not respond in time. Please try again." },
+      {
+        error:
+          "The image service is busy right now. Please wait a moment and press Generate again.",
+      },
       { status: 502 }
     );
   }
-
-  if (!res.ok) {
-    return NextResponse.json(
-      { error: `The image service returned an error (${res.status}). Please try again.` },
-      { status: 502 }
-    );
-  }
-
-  const contentType = res.headers.get("content-type") ?? "";
-  if (!contentType.startsWith("image/")) {
-    return NextResponse.json(
-      { error: "The image service did not return an image. Please try again." },
-      { status: 502 }
-    );
-  }
-
-  const bytes = Buffer.from(await res.arrayBuffer());
-  if (bytes.length < 1000) {
-    return NextResponse.json(
-      { error: "The generated image was empty. Please try again." },
-      { status: 502 }
-    );
-  }
-
-  const ext = contentType.includes("png") ? ".png" : ".jpg";
-  const name = await saveBytes(bytes, ext);
-
-  return NextResponse.json({ url: `/api/files/${name}`, provider: "pollinations", seed });
+  return NextResponse.json({ status: "pending", provider: "horde", jobId: sub.id });
 }
