@@ -43,7 +43,18 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
     10–49 tier); pages `/`,`/studio/...`,`/cart`,`/checkout`,`/account/login`,`/admin/login` → all 200;
     admin login → 200, 2 orders listed, status updated to IN_PRODUCTION → 200.
 
-**Phase 5 — Optional extras (AI generation, background removal, saved designs): PARTIAL**
+**AI generation + sleeve print areas: DONE and verified live**
+  - Four print areas per product: front, back, left sleeve, right sleeve (geometry in the DB).
+  - AI: short text prompt → image via Pollinations (no API key) → stored in `StoredFile` → added to
+    the selected side. Route: `app/api/generate/route.ts`.
+  - evidence (local): `/api/generate` → "200 provider=pollinations ... 70554 bytes"; short prompt →
+    "400"; product → "printLeftSleeve=2.4x2.4in at (0.9,4.6)"; left-sleeve order → "200"; db-report →
+    "left_sleeve=1 ... print: leftSleeve=yes".
+  - evidence (live Vercel): studio markers AI panel/Left sleeve/Right sleeve True; `/api/generate` →
+    "200 ... 39044 bytes"; right-sleeve order → "200 totalPaise:79800"; admin → "rightSleevePrintUrl
+    set: True, right=1". Tests 31 passed; build ✓.
+
+**Phase 5 — Optional extras (background removal, saved designs): PARTIAL**
   - Customer accounts — profile (name/phone/email/address, editable) and order history with current
     status: **DONE and verified.** evidence: register → 200; `/api/account/me` without cookie → 401,
     with cookie → 200; duplicate register → 409; wrong password → 401; `PATCH` profile → 200 and

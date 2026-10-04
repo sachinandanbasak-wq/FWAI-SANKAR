@@ -45,3 +45,5 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Schema to Supabase -> `npx.cmd prisma db push` -> "in sync ... Done in 3.04s"; tests -> "Tests 31 passed (31)".
 - Local functional test -> products expose "printLeftSleeve=2.4x2.4in at (0.9,4.6)"; `/api/generate` -> "200 provider=pollinations ... 70554 bytes"; short prompt -> "400 Please describe the design"; order with a left-sleeve element -> "200 ... totalPaise:39900".
 - Persistence -> `node scripts/db-report.mjs` -> "left_sleeve=1 ... print: leftSleeve=yes".
+- Redeployed AI + sleeves -> `vercel deploy --prod --yes` -> "Aliased https://sweet-ginger-studio-pied.vercel.app".
+- Live AI + sleeves verification -> studio page "200"; markers AI panel True / Left sleeve True / Right sleeve True; live `/api/generate` -> "200 provider=pollinations ... 39044 bytes"; live order with right_sleeve -> "200 ... totalPaise:79800"; admin -> "rightSleevePrintUrl set: True / design sides right=1".
