@@ -117,6 +117,8 @@ export async function POST(req: NextRequest) {
             artworkUrlsJson: JSON.stringify(r.artworkUrls),
             printFrontUrl: r.item.printFrontUrl ?? null,
             printBackUrl: r.item.printBackUrl ?? null,
+            printLeftSleeveUrl: r.item.printLeftSleeveUrl ?? null,
+            printRightSleeveUrl: r.item.printRightSleeveUrl ?? null,
           })),
         },
       },

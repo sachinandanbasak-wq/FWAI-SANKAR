@@ -67,6 +67,40 @@ describe("order validation — rule 4 (no design, no order)", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts a design whose only element is on the left sleeve", () => {
+    const order = baseOrder();
+    order.items[0].design = {
+      front: [],
+      back: [],
+      left_sleeve: [
+        {
+          id: "s1",
+          type: "image",
+          side: "left_sleeve",
+          x: 120,
+          y: 120,
+          width: 200,
+          height: 200,
+          rotation: 0,
+          src: "/api/files/ai.png",
+          aiGenerated: true,
+        },
+      ],
+      right_sleeve: [],
+    };
+    expect(orderSchema.safeParse(order).success).toBe(true);
+  });
+
+  it("accepts a design with no sleeve keys (older clients) and defaults them to empty", () => {
+    const order = baseOrder();
+    const parsed = orderSchema.safeParse(order);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.items[0].design.left_sleeve).toEqual([]);
+      expect(parsed.data.items[0].design.right_sleeve).toEqual([]);
+    }
+  });
+
   it("rejects an image element with no file", () => {
     const order = baseOrder();
     order.items[0].design = {

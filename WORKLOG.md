@@ -40,3 +40,8 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Live verification -> site "200 products=3"; upload stored+served "200 image/png bytes=70"; order "200 totalPaise:987000" (30 x ₹329 tier); pages /,/studio,/cart,/checkout,/account/login,/admin/login all "200"; admin login "200"; admin orders "2"; status update "200 IN_PRODUCTION".
 - Redesigned the studio to the Design Lab layout (left tool rail, "How do you want to start?" panel, front/back thumbnails, zoom, bottom product/colour + Get Price bar) -> `npm.cmd run build` -> "✓ Compiled successfully"; tests -> "Tests 29 passed (29)".
 - Redeployed -> `vercel deploy --prod --yes` -> "Aliased https://sweet-ginger-studio-pied.vercel.app"; live studio page -> "200"; checks -> starter heading True, Add Text True, "Get price / Add to cart" True, Fit True, Print area True; /api/products -> "200 products=3".
+- Added AI generation (Pollinations, no key) + four print sides (front/back/left sleeve/right sleeve) -> edited lib/design.ts, catalog.ts, validation.ts, StudioCanvas, StudioClient, checkout, admin, schema, seed; new `app/api/generate/route.ts`.
+- Verified the AI provider before coding -> GET image.pollinations.ai -> "200 content-type=image/jpeg bytes=38019".
+- Schema to Supabase -> `npx.cmd prisma db push` -> "in sync ... Done in 3.04s"; tests -> "Tests 31 passed (31)".
+- Local functional test -> products expose "printLeftSleeve=2.4x2.4in at (0.9,4.6)"; `/api/generate` -> "200 provider=pollinations ... 70554 bytes"; short prompt -> "400 Please describe the design"; order with a left-sleeve element -> "200 ... totalPaise:39900".
+- Persistence -> `node scripts/db-report.mjs` -> "left_sleeve=1 ... print: leftSleeve=yes".

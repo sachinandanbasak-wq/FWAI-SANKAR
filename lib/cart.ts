@@ -15,6 +15,8 @@ export type CartItem = {
   shirtBox: ShirtBox;
   printFront: PrintArea;
   printBack: PrintArea;
+  printLeftSleeve: PrintArea;
+  printRightSleeve: PrintArea;
   quantity: number;
   // Display only. The server recomputes the real price from the price tiers.
   unitPricePaise: number;

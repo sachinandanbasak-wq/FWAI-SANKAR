@@ -31,6 +31,8 @@ model Product {
   shirtBoxJson     String // { widthIn, heightIn }
   printFrontJson   String // { xIn, yIn, widthIn, heightIn }
   printBackJson    String // { xIn, yIn, widthIn, heightIn }
+  printLeftSleeveJson  String? // sleeve / shoulder print areas
+  printRightSleeveJson String?
   colors           Color[]
   sizes            Size[]
   tiers            PriceTier[]
@@ -127,4 +129,6 @@ model OrderItem {
   artworkUrlsJson String? // uploaded artwork URLs used in the design
   printFrontUrl   String? // transparent PNG at print size, front
   printBackUrl    String? // transparent PNG at print size, back
+  printLeftSleeveUrl  String?
+  printRightSleeveUrl String?
 }

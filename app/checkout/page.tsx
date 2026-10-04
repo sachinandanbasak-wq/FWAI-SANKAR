@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { clearCart, getCart, type CartItem } from "@/lib/cart";
-import type { DesignElement } from "@/lib/design";
+import { SIDES, type DesignElement, type PrintArea, type Side } from "@/lib/design";
 import { formatPaise } from "@/lib/pricing";
 
 type Settings = { printDpi: number; printMethods: string[] };
@@ -124,45 +124,36 @@ export default function CheckoutPage() {
 
       const resolvedItems = [] as Record<string, unknown>[];
       for (const item of items) {
-        const front: string | null =
-          item.design.front.length > 0
-            ? await uploadPrint(
-                await exportPrintPng(
-                  item.design,
-                  "front",
-                  item.printFront,
-                  settings.printDpi
-                ),
-                `${item.productSlug}-front.png`
-              )
-            : null;
-        const back: string | null =
-          item.design.back.length > 0
-            ? await uploadPrint(
-                await exportPrintPng(
-                  item.design,
-                  "back",
-                  item.printBack,
-                  settings.printDpi
-                ),
-                `${item.productSlug}-back.png`
-              )
-            : null;
+        const areas: Record<Side, PrintArea> = {
+          front: item.printFront,
+          back: item.printBack,
+          left_sleeve: item.printLeftSleeve,
+          right_sleeve: item.printRightSleeve,
+        };
+        const printUrls: Record<string, string | null> = {};
+        for (const s of SIDES) {
+          if (item.design[s].length === 0) {
+            printUrls[s] = null;
+            continue;
+          }
+          const blob = await exportPrintPng(item.design, s, areas[s], settings.printDpi);
+          printUrls[s] = await uploadPrint(blob, `${item.productSlug}-${s}.png`);
+        }
 
+        const allElements = SIDES.flatMap((s) => item.design[s]);
         resolvedItems.push({
           productId: item.productId,
           colorName: item.colorName,
           colorHex: item.colorHex,
           sizes: item.sizes,
           design: item.design,
-          artworkUrls: [
-            ...item.design.front,
-            ...item.design.back,
-          ]
+          artworkUrls: allElements
             .filter((el: DesignElement) => el.type === "image" && el.src)
             .map((el: DesignElement) => el.src as string),
-          printFrontUrl: front,
-          printBackUrl: back,
+          printFrontUrl: printUrls.front,
+          printBackUrl: printUrls.back,
+          printLeftSleeveUrl: printUrls.left_sleeve,
+          printRightSleeveUrl: printUrls.right_sleeve,
         });
       }
 

@@ -11,13 +11,20 @@ type AdminItem = {
   colorName: string;
   colorHex: string;
   sizes: Record<string, number>;
-  design: { front: unknown[]; back: unknown[] };
+  design: {
+    front: unknown[];
+    back: unknown[];
+    left_sleeve?: unknown[];
+    right_sleeve?: unknown[];
+  };
   quantity: number;
   unitPricePaise: number;
   lineTotalPaise: number;
   artworkUrls: string[];
   printFrontUrl: string | null;
   printBackUrl: string | null;
+  printLeftSleeveUrl: string | null;
+  printRightSleeveUrl: string | null;
 };
 
 type AdminOrder = {
@@ -203,8 +210,10 @@ export default function AdminPage() {
                       .filter(([, q]) => q > 0)
                       .map(([s, q]) => `${s}×${q}`)
                       .join(", ");
+                    const left = item.design.left_sleeve?.length ?? 0;
+                    const right = item.design.right_sleeve?.length ?? 0;
                     const count =
-                      item.design.front.length + item.design.back.length;
+                      item.design.front.length + item.design.back.length + left + right;
                     return (
                       <div key={item.id} className="rounded-md border border-stone-200 p-3 text-sm">
                         <div className="flex items-center gap-2">
@@ -223,8 +232,10 @@ export default function AdminPage() {
                           </span>
                         </p>
                         <p className="mt-1 text-xs text-stone-500">
-                          {count} design element{count === 1 ? "" : "s"} (
-                          {item.design.front.length} front / {item.design.back.length} back)
+                          {count} design element{count === 1 ? "" : "s"} ({item.design.front.length}{" "}
+                          front / {item.design.back.length} back
+                          {left > 0 ? ` / ${left} L-sleeve` : ""}
+                          {right > 0 ? ` / ${right} R-sleeve` : ""})
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2 text-xs">
                           {item.printFrontUrl && (
@@ -243,6 +254,24 @@ export default function AdminPage() {
                               download
                             >
                               Print-ready back (PNG)
+                            </a>
+                          )}
+                          {item.printLeftSleeveUrl && (
+                            <a
+                              className="btn-outline px-2 py-1"
+                              href={item.printLeftSleeveUrl}
+                              download
+                            >
+                              Print-ready left sleeve (PNG)
+                            </a>
+                          )}
+                          {item.printRightSleeveUrl && (
+                            <a
+                              className="btn-outline px-2 py-1"
+                              href={item.printRightSleeveUrl}
+                              download
+                            >
+                              Print-ready right sleeve (PNG)
                             </a>
                           )}
                           {item.artworkUrls.map((u) => (

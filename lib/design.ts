@@ -2,7 +2,16 @@
 // Geometry is in "print units" where 1 inch = 100 units. Positions are the
 // CENTRE of the element and are RELATIVE to the print area's top-left corner.
 
-export type Side = "front" | "back";
+export type Side = "front" | "back" | "left_sleeve" | "right_sleeve";
+
+export const SIDES: Side[] = ["front", "back", "left_sleeve", "right_sleeve"];
+
+export const SIDE_LABELS: Record<Side, string> = {
+  front: "Front",
+  back: "Back",
+  left_sleeve: "Left sleeve",
+  right_sleeve: "Right sleeve",
+};
 
 export type PrintArea = {
   xIn: number;
@@ -14,6 +23,21 @@ export type PrintArea = {
 export type ShirtBox = { widthIn: number; heightIn: number };
 
 export const UNITS_PER_INCH = 100;
+
+// Placeholder sleeve/shoulder print areas (in inches, on the shirt from the
+// front). Settings-driven: change the product rows to adjust.
+export const DEFAULT_LEFT_SLEEVE_PRINT: PrintArea = {
+  xIn: 0.9,
+  yIn: 4.6,
+  widthIn: 2.4,
+  heightIn: 2.4,
+};
+export const DEFAULT_RIGHT_SLEEVE_PRINT: PrintArea = {
+  xIn: 16.7,
+  yIn: 4.6,
+  widthIn: 2.4,
+  heightIn: 2.4,
+};
 
 export type DesignElement = {
   id: string;
@@ -32,24 +56,61 @@ export type DesignElement = {
   // image only
   src?: string;
   artworkName?: string;
+  // true when the image came from AI generation
+  aiGenerated?: boolean;
 };
 
 export type Design = {
   front: DesignElement[];
   back: DesignElement[];
+  left_sleeve: DesignElement[];
+  right_sleeve: DesignElement[];
 };
 
 export function emptyDesign(): Design {
-  return { front: [], back: [] };
+  return { front: [], back: [], left_sleeve: [], right_sleeve: [] };
+}
+
+/** Fill in any missing side arrays (older saved designs only had front/back). */
+export function normalizeDesign(input: Partial<Design> | null | undefined): Design {
+  const base = emptyDesign();
+  if (!input) return base;
+  for (const s of SIDES) {
+    const arr = (input as Record<string, unknown>)[s];
+    if (Array.isArray(arr)) base[s] = arr as DesignElement[];
+  }
+  return base;
 }
 
 export function designElementCount(design: Design): number {
-  return design.front.length + design.back.length;
+  return SIDES.reduce((sum, s) => sum + (design[s]?.length ?? 0), 0);
 }
 
 export function isDesignEmpty(design: Design): boolean {
   return designElementCount(design) === 0;
 }
+
+export function printAreaFor(product: ProductGeometry, side: Side): PrintArea {
+  switch (side) {
+    case "front":
+      return product.printFront;
+    case "back":
+      return product.printBack;
+    case "left_sleeve":
+      return product.printLeftSleeve;
+    case "right_sleeve":
+      return product.printRightSleeve;
+  }
+}
+
+/** The geometry fields the canvas needs, without importing the DB layer. */
+export type ProductGeometry = {
+  shirtBox: ShirtBox;
+  printFront: PrintArea;
+  printBack: PrintArea;
+  printLeftSleeve: PrintArea;
+  printRightSleeve: PrintArea;
+};
 
 // T-shirt silhouette used by both the product cards and the studio canvas.
 // Viewbox is 1000 x 1200 and maps onto the product's shirtBox.

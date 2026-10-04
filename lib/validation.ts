@@ -10,7 +10,7 @@ export const designElementSchema = z
   .object({
     id: z.string().min(1),
     type: z.enum(["text", "image"]),
-    side: z.enum(["front", "back"]),
+    side: z.enum(["front", "back", "left_sleeve", "right_sleeve"]),
     x: z.number().finite(),
     y: z.number().finite(),
     width: z.number().positive(),
@@ -22,6 +22,7 @@ export const designElementSchema = z
     fill: z.string().optional(),
     src: z.string().optional(),
     artworkName: z.string().optional(),
+    aiGenerated: z.boolean().optional(),
   })
   .superRefine((el, ctx) => {
     if (el.type === "image" && !el.src) {
@@ -41,6 +42,8 @@ export const designElementSchema = z
 export const designSchema = z.object({
   front: z.array(designElementSchema),
   back: z.array(designElementSchema),
+  left_sleeve: z.array(designElementSchema).optional().default([]),
+  right_sleeve: z.array(designElementSchema).optional().default([]),
 });
 
 const sizeBreakdownSchema = z.record(z.string(), z.number().int().min(0));
@@ -55,6 +58,8 @@ export const orderItemSchema = z
     artworkUrls: z.array(z.string()).optional().default([]),
     printFrontUrl: z.string().min(1).nullable().optional(),
     printBackUrl: z.string().min(1).nullable().optional(),
+    printLeftSleeveUrl: z.string().min(1).nullable().optional(),
+    printRightSleeveUrl: z.string().min(1).nullable().optional(),
   })
   .superRefine((item, ctx) => {
     const qty = Object.values(item.sizes).reduce((a, b) => a + b, 0);
@@ -64,7 +69,11 @@ export const orderItemSchema = z
         message: "Add at least one piece to the size breakdown.",
       });
     }
-    const elements = item.design.front.length + item.design.back.length;
+    const elements =
+      item.design.front.length +
+      item.design.back.length +
+      (item.design.left_sleeve?.length ?? 0) +
+      (item.design.right_sleeve?.length ?? 0);
     if (elements < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

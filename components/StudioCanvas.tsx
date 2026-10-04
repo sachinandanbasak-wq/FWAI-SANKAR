@@ -17,6 +17,7 @@ import {
   SHIRT_PATH,
   SHIRT_VIEWBOX,
   UNITS_PER_INCH,
+  printAreaFor,
   type Design,
   type DesignElement,
   type Side,
@@ -104,7 +105,7 @@ export default function StudioCanvas({
   const stageWidth = width * zoom;
   const displayH = width * (shirtH / shirtW) * zoom;
 
-  const printArea = side === "front" ? product.printFront : product.printBack;
+  const printArea = printAreaFor(product, side);
   const pw = printArea.widthIn * UNITS_PER_INCH;
   const ph = printArea.heightIn * UNITS_PER_INCH;
 

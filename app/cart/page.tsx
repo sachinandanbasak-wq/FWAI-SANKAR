@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getCart, removeFromCart, type CartItem } from "@/lib/cart";
 import type { PublicProduct } from "@/lib/catalog";
+import { designElementCount } from "@/lib/design";
 import { formatPaise } from "@/lib/pricing";
 
 const StudioCanvas = dynamic(() => import("@/components/StudioCanvas"), {
@@ -78,8 +79,7 @@ export default function CartPage() {
             .filter(([, q]) => q > 0)
             .map(([s, q]) => `${s}×${q}`)
             .join(", ");
-          const elementCount =
-            item.design.front.length + item.design.back.length;
+          const elementCount = designElementCount(item.design);
           return (
             <div key={item.id} className="card p-4">
               <div className="flex gap-4">

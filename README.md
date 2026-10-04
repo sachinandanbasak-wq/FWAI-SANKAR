@@ -93,6 +93,15 @@ npm.cmd run start
    XL 10). The price updates live and uses the bulk tier.
 7. Pick a **print method**, then **Add to cart** and check out.
 
+**Four print areas:** front, back, **left sleeve** and **right sleeve**. Pick the side in the
+right-hand thumbnails first, then add text/artwork/AI art to that side.
+
+**AI design:** in the *Generate a design with AI* panel, type a short description (for example
+"a bold tiger head logo in orange and black") and press Generate. The image is added to whichever
+side you are on, and can be moved, resized and rotated like any artwork. AI images come from
+Pollinations (no API key needed); to use a paid provider, add its key and branch in
+`app/api/generate/route.ts`.
+
 ### Customer accounts (profile and order tracking)
 
 - **Create an account** at `/account/register`, or sign in at `/account/login`.

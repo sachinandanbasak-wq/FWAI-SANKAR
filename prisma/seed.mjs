@@ -14,6 +14,9 @@ const prisma = new PrismaClient();
 const SHIRT_BOX = { widthIn: 20, heightIn: 24 };
 const PRINT_FRONT = { xIn: 4.5, yIn: 5.5, widthIn: 11, heightIn: 14 };
 const PRINT_BACK = { xIn: 4.5, yIn: 4.5, widthIn: 11, heightIn: 15 };
+// Sleeve / shoulder print areas (DUMMY placeholders).
+const PRINT_LEFT_SLEEVE = { xIn: 0.9, yIn: 4.6, widthIn: 2.4, heightIn: 2.4 };
+const PRINT_RIGHT_SLEEVE = { xIn: 16.7, yIn: 4.6, widthIn: 2.4, heightIn: 2.4 };
 
 const SETTINGS = {
   currency: "INR",
@@ -123,6 +126,8 @@ async function main() {
         shirtBoxJson: JSON.stringify(SHIRT_BOX),
         printFrontJson: JSON.stringify(PRINT_FRONT),
         printBackJson: JSON.stringify(PRINT_BACK),
+        printLeftSleeveJson: JSON.stringify(PRINT_LEFT_SLEEVE),
+        printRightSleeveJson: JSON.stringify(PRINT_RIGHT_SLEEVE),
         colors: {
           create: COLORS.map((c, i) => ({ ...c, sortOrder: i })),
         },

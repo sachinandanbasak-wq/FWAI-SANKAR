@@ -8,7 +8,12 @@ import type { PublicProduct } from "@/lib/catalog";
 import type { Settings } from "@/lib/settings";
 import {
   FONTS,
+  SIDES,
+  SIDE_LABELS,
   UNITS_PER_INCH,
+  designElementCount,
+  isDesignEmpty,
+  printAreaFor,
   type Design,
   type DesignElement,
   type Side,
@@ -61,6 +66,13 @@ function IconUpload() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
       <path d="M12 16V5m0 0L8 9m4-4 4 4M5 19h14" />
+    </svg>
+  );
+}
+function IconSpark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
+      <path d="M12 3v4M12 17v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M3 12h4M17 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" />
     </svg>
   );
 }
@@ -128,12 +140,15 @@ export default function StudioClient({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const printArea = side === "front" ? product.printFront : product.printBack;
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+
+  const printArea = printAreaFor(product, side);
   const pw = printArea.widthIn * UNITS_PER_INCH;
   const ph = printArea.heightIn * UNITS_PER_INCH;
   const elements = design[side];
   const selected = elements.find((e) => e.id === selectedId) ?? null;
-  const isEmpty = design.front.length + design.back.length === 0;
+  const isEmpty = isDesignEmpty(design);
   const colorName = product.colors.find((c) => c.hex === colorHex)?.name ?? "Custom";
 
   const effectiveSizes = useMemo(() => {
@@ -270,12 +285,61 @@ export default function StudioClient({
     }
   }
 
+  async function generateAi() {
+    setMessage(null);
+    if (aiPrompt.trim().length < 3) {
+      setMessage({ kind: "error", text: "Describe the design you want (a few words is enough)." });
+      return;
+    }
+    setAiBusy(true);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage({ kind: "error", text: data.error ?? "Generation failed. Please try again." });
+        return;
+      }
+      const size = Math.min(pw, ph) * 0.85;
+      const el = clampElementToPrintArea(
+        {
+          id: newId(),
+          type: "image",
+          side,
+          x: pw / 2,
+          y: ph / 2,
+          width: size,
+          height: size,
+          rotation: 0,
+          src: data.url,
+          artworkName: aiPrompt.slice(0, 60),
+          aiGenerated: true,
+        },
+        pw,
+        ph
+      );
+      setElements([...elements, el]);
+      setSelectedId(el.id);
+      setMessage({
+        kind: "info",
+        text: `Generated a design and placed it on the ${SIDE_LABELS[side].toLowerCase()}. Drag to move, or switch side and generate another.`,
+      });
+    } catch {
+      setMessage({ kind: "error", text: "Generation failed. Please check your connection and try again." });
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
   function onAddToCart() {
     if (totalQty < 1) {
       setMessage({ kind: "error", text: "Add at least one piece before adding to the cart." });
       return;
     }
-    if (design.front.length + design.back.length < 1) {
+    if (designElementCount(design) < 1) {
       setMessage({
         kind: "error",
         text: "Add text or artwork before ordering. An order cannot be placed without a design.",
@@ -295,6 +359,8 @@ export default function StudioClient({
       shirtBox: product.shirtBox,
       printFront: product.printFront,
       printBack: product.printBack,
+      printLeftSleeve: product.printLeftSleeve,
+      printRightSleeve: product.printRightSleeve,
       quantity: totalQty,
       unitPricePaise,
       lineTotalPaise,
@@ -308,6 +374,9 @@ export default function StudioClient({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[76px_minmax(0,1fr)_320px]">
         {/* Left tool rail */}
         <aside className="sticky top-4 hidden h-fit flex-col gap-1 rounded-xl border border-stone-200 bg-white p-2 shadow-sm lg:flex">
+          <RailButton label="AI Design" onClick={() => scrollToId("ai")}>
+            <IconSpark />
+          </RailButton>
           <RailButton label="Add Text" onClick={addText}>
             <IconText />
           </RailButton>
@@ -348,11 +417,11 @@ export default function StudioClient({
                     <StarterTile label="Add text" onClick={addText}>
                       <IconText />
                     </StarterTile>
+                    <StarterTile label="Generate with AI" onClick={() => scrollToId("ai")}>
+                      <IconSpark />
+                    </StarterTile>
                     <StarterTile label="Change product" href="/">
                       <IconTag />
-                    </StarterTile>
-                    <StarterTile label="Shirt colour" onClick={() => scrollToId("colour")}>
-                      <IconPalette />
                     </StarterTile>
                   </div>
                   <ul className="mt-5 space-y-1 text-xs text-stone-500">
@@ -409,7 +478,7 @@ export default function StudioClient({
           {/* Side thumbnails + zoom */}
           <section className="card p-3">
             <div className="grid grid-cols-2 gap-2">
-              {(["front", "back"] as Side[]).map((s) => (
+              {SIDES.map((s) => (
                 <button
                   key={s}
                   onClick={() => {
@@ -434,8 +503,8 @@ export default function StudioClient({
                       editorMode={false}
                     />
                   </div>
-                  <div className="mt-1 flex items-center justify-center gap-1 text-[11px] font-medium capitalize text-stone-600">
-                    {s}
+                  <div className="mt-1 flex items-center justify-center gap-1 text-[11px] font-medium text-stone-600">
+                    {SIDE_LABELS[s]}
                     {design[s].length > 0 && (
                       <span className="rounded bg-ginger/15 px-1 text-[10px] text-ginger-dark">
                         {design[s].length}
@@ -469,6 +538,33 @@ export default function StudioClient({
                 Fit
               </button>
             </div>
+          </section>
+
+          {/* AI design */}
+          <section className="card p-4" id="ai">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <IconSpark /> Generate a design with AI
+            </h2>
+            <p className="mt-1 text-xs text-stone-500">
+              Describe it in a few words. It is added to the{" "}
+              <span className="font-medium text-stone-700">{SIDE_LABELS[side]}</span> print area — switch
+              side first to place it elsewhere.
+            </p>
+            <textarea
+              className="input mt-3"
+              rows={2}
+              maxLength={300}
+              placeholder="For example: a bold tiger head logo in orange and black"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+            />
+            <button className="btn-primary mt-3 w-full" onClick={generateAi} disabled={aiBusy}>
+              {aiBusy ? "Generating…" : `Generate on ${SIDE_LABELS[side].toLowerCase()}`}
+            </button>
+            <p className="mt-2 text-[11px] text-stone-400">
+              AI images are generated by a third-party service and placed on the shirt. Check them
+              before printing.
+            </p>
           </section>
 
           {/* Colour */}

@@ -1,5 +1,10 @@
 import { prisma } from "./db";
-import type { PrintArea, ShirtBox } from "./design";
+import {
+  DEFAULT_LEFT_SLEEVE_PRINT,
+  DEFAULT_RIGHT_SLEEVE_PRINT,
+  type PrintArea,
+  type ShirtBox,
+} from "./design";
 import type { Tier } from "./pricing";
 
 export type { PrintArea, ShirtBox };
@@ -14,6 +19,8 @@ export type PublicProduct = {
   shirtBox: { widthIn: number; heightIn: number };
   printFront: PrintArea;
   printBack: PrintArea;
+  printLeftSleeve: PrintArea;
+  printRightSleeve: PrintArea;
   colors: { name: string; hex: string }[];
   sizes: string[];
   tiers: Tier[];
@@ -54,6 +61,14 @@ export function toPublicProduct(p: ProductRow): PublicProduct {
       widthIn: 11,
       heightIn: 15,
     }),
+    printLeftSleeve: parse(
+      p.printLeftSleeveJson ?? "",
+      DEFAULT_LEFT_SLEEVE_PRINT
+    ),
+    printRightSleeve: parse(
+      p.printRightSleeveJson ?? "",
+      DEFAULT_RIGHT_SLEEVE_PRINT
+    ),
     colors: [...p.colors]
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((c) => ({ name: c.name, hex: c.hex })),
