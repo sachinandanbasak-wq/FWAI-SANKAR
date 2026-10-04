@@ -65,6 +65,11 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
   - **Fast keyless fix:** added FLUX.1-schnell on a public Hugging Face Space as the primary provider
     (probe: 2.2 s first image, 3.8 s second; live: four consecutive generations all `done` in 4.8–6.2 s,
     providers `huggingface`/`pollinations`). Repeated generation on the same side now works.
+  - **Prompt accuracy:** a one-word prompt ("tree") was producing a repeating pattern. Fixed with a
+    deterministic single-subject print brief (`buildImagePrompt`) that forbids patterns/frames and
+    forces one centred subject — no second API call, so it cannot be rate-limited. Verified by
+    downloading and viewing the images: "tree" → a single centred tree; "a red sports car" → one red
+    car; "a cute baby face" → one face (a stray frame disappeared after the wording change).
   - **Any language:** non-English prompts are translated to English first (MyMemory with script
     detection for Indian/Arabic/CJK scripts, then Pollinations text, then the original as a last
     resort). Live: Hindi "एक लाल कार" → `usedPrompt='A red car'`; Tamil → "A blue star"; Bengali →

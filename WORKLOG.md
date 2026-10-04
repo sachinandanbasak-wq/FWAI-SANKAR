@@ -63,3 +63,6 @@ One line per slice: what I did -> the command I ran -> what it actually printed.
 - Live stress test, 5 consecutive generations -> all DONE: "huggingface 11479ms / 6245ms / 4651ms / 4301ms / pollinations 3766ms".
 - Multilingual prompts: translate to English first (MyMemory with script detection, then Pollinations text, then original). JSON body sent as UTF-8 for the test.
 - Live multilingual test -> "Hindi 'एक लाल कार' usedPrompt='A red car'; Tamil -> 'A blue star'; Bengali -> 'A green tree'; Arabic -> 'Red car.'; English -> unchanged"; all DONE provider=huggingface.
+- Diagnosed "tree" producing a leaf pattern: a vague one-word prompt makes the model fill the frame. Fix: deterministic single-subject print brief (`buildImagePrompt`) — no second API call, so it cannot be rate-limited. Strengthened later with explicit "no border/frame".
+- Verified by downloading the generated images and viewing them: "tree" -> a single centred tree on white; "a red sports car" -> a single red car; "a cute baby face" -> single face; after the wording change the stray frame was gone.
+- Local build hit the OneDrive `.next` "EINVAL readlink" glitch; cleared `.next` and rebuilt -> "✓ Compiled successfully". (Vercel build had already succeeded.)
