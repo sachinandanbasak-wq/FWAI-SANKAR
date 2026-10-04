@@ -8,6 +8,7 @@ import {
   Group,
   Path,
   Rect,
+  Circle,
   Text as KText,
   Image as KImage,
   Transformer,
@@ -33,6 +34,7 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onChange: (design: Design) => void;
+  onDelete?: (id: string) => void;
   editorMode: boolean;
   zoom?: number;
 };
@@ -91,6 +93,7 @@ export default function StudioCanvas({
   selectedId,
   onSelect,
   onChange,
+  onDelete,
   editorMode,
   zoom = 1,
 }: Props) {
@@ -110,6 +113,7 @@ export default function StudioCanvas({
   const ph = printArea.heightIn * UNITS_PER_INCH;
 
   const elements = design[side];
+  const selectedEl = elements.find((e) => e.id === selectedId) ?? null;
   const imageSrcs = elements
     .filter((e) => e.type === "image" && e.src)
     .map((e) => e.src as string);
@@ -267,6 +271,39 @@ export default function StudioCanvas({
               >
                 {elements.map(renderElement)}
               </Group>
+
+              {/* Delete control attached to the selected element */}
+              {editorMode && selectedEl && onDelete && scale > 0 && (
+                <Group
+                  x={
+                    printArea.xIn * UNITS_PER_INCH +
+                    selectedEl.x +
+                    (selectedEl.width / 2) * Math.cos((selectedEl.rotation * Math.PI) / 180) +
+                    (selectedEl.height / 2) * Math.sin((selectedEl.rotation * Math.PI) / 180)
+                  }
+                  y={
+                    printArea.yIn * UNITS_PER_INCH +
+                    selectedEl.y +
+                    (selectedEl.width / 2) * Math.sin((selectedEl.rotation * Math.PI) / 180) -
+                    (selectedEl.height / 2) * Math.cos((selectedEl.rotation * Math.PI) / 180)
+                  }
+                  onClick={() => onDelete(selectedEl.id)}
+                  onTap={() => onDelete(selectedEl.id)}
+                >
+                  <Circle radius={15 / scale} fill="#dc2626" stroke="#ffffff" strokeWidth={2 / scale} />
+                  <KText
+                    text="×"
+                    fontSize={(15 / scale) * 1.5}
+                    fill="#ffffff"
+                    width={30 / scale}
+                    height={30 / scale}
+                    x={-15 / scale}
+                    y={-15 / scale}
+                    align="center"
+                    verticalAlign="middle"
+                  />
+                </Group>
+              )}
             </Group>
 
             {editorMode && (

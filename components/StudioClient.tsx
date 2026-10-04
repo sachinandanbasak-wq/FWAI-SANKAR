@@ -218,10 +218,20 @@ export default function StudioClient({
     setElements(elements.map((e) => (e.id === next.id ? next : e)));
   }
 
-  function deleteSelected() {
-    if (!selected) return;
-    setElements(elements.filter((e) => e.id !== selected.id));
+  function deleteById(id: string) {
+    setElements(elements.filter((e) => e.id !== id));
     setSelectedId(null);
+    setMessage({ kind: "info", text: "Removed. You can add a new text or picture any time." });
+  }
+
+  function deleteSelected() {
+    if (selected) deleteById(selected.id);
+  }
+
+  function clearSide() {
+    setElements([]);
+    setSelectedId(null);
+    setMessage({ kind: "info", text: `Cleared everything on the ${SIDE_LABELS[side].toLowerCase()}.` });
   }
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -402,6 +412,7 @@ export default function StudioClient({
               selectedId={selectedId}
               onSelect={setSelectedId}
               onChange={setDesign}
+              onDelete={deleteById}
               editorMode
               zoom={zoom}
             />
@@ -449,8 +460,16 @@ export default function StudioClient({
               onChange={onUpload}
             />
             {selected && (
-              <button className="btn-ghost text-red-600" onClick={deleteSelected}>
+              <button
+                className="btn-outline border-red-200 text-red-600 hover:bg-red-50"
+                onClick={deleteSelected}
+              >
                 Delete selected
+              </button>
+            )}
+            {elements.length > 0 && (
+              <button className="btn-ghost text-red-600" onClick={clearSide}>
+                Clear {SIDE_LABELS[side].toLowerCase()}
               </button>
             )}
             <span className="ml-auto text-xs text-stone-500">
@@ -646,6 +665,16 @@ export default function StudioClient({
                   for the best print quality.
                 </p>
               )}
+
+              <button
+                className="btn-outline mt-4 w-full border-red-200 text-red-600 hover:bg-red-50"
+                onClick={() => deleteById(selected.id)}
+              >
+                Delete this {selected.type === "text" ? "text" : "picture"}
+              </button>
+              <p className="mt-2 text-center text-[11px] text-stone-400">
+                Or click the red × on the design.
+              </p>
             </section>
           )}
 
