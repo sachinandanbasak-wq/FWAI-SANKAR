@@ -65,6 +65,9 @@ by working code, this report, and `README.md` (beginner setup + test checklist).
   - **Fast keyless fix:** added FLUX.1-schnell on a public Hugging Face Space as the primary provider
     (probe: 2.2 s first image, 3.8 s second; live: four consecutive generations all `done` in 4.8–6.2 s,
     providers `huggingface`/`pollinations`). Repeated generation on the same side now works.
+  - **Robustness:** the client retries the fast providers up to 3× before falling to the queue, so a
+    momentarily busy Space no longer drops straight to the slow path. Live stress test, 5 consecutive
+    generations → all `done` in 3.8–11.5 s (four `huggingface`, one `pollinations`).
   - **Honest limit:** all three providers are free/public, so a very heavy day could still be throttled;
     for guaranteed production volume, set a paid key. The code already supports
     `POLLINATIONS_TOKEN` / `HORDE_API_KEY` / `HF_SPACE`.
