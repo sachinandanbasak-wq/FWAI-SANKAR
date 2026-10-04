@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { STYLE, hordeSubmit, tryHuggingFace, tryPollinations } from "@/lib/ai";
+import {
+  STYLE,
+  hordeSubmit,
+  translateToEnglish,
+  tryHuggingFace,
+  tryPollinations,
+} from "@/lib/ai";
 import { extForContentType, saveBytes } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -35,7 +41,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const fullPrompt = `${parsed.data.prompt}. ${STYLE}`;
+  // Prompts may be in any language; the image models want English.
+  const english = await translateToEnglish(parsed.data.prompt);
+  const fullPrompt = `${english}. ${STYLE}`;
 
   // 1. Fast, keyless: FLUX.1-schnell on a public Hugging Face Space.
   const hf = await tryHuggingFace(fullPrompt);
@@ -45,6 +53,7 @@ export async function POST(req: NextRequest) {
       status: "done",
       url: `/api/files/${name}`,
       provider: "huggingface",
+      usedPrompt: english,
     });
   }
 
@@ -56,6 +65,7 @@ export async function POST(req: NextRequest) {
       status: "done",
       url: `/api/files/${name}`,
       provider: "pollinations",
+      usedPrompt: english,
     });
   }
 

@@ -39,6 +39,75 @@ function pollinationsUrl(prompt: string, seed: number): string {
 
 export type ImageBytes = { bytes: Buffer; contentType: string };
 
+// ---- Prompt translation -----------------------------------------------------
+// Image models understand English best. Any prompt typed in another script is
+// translated to English first. Romanised text (plain ASCII) is left alone.
+
+const ASCII_ONLY = /^[\x20-\x7E\r\n\t]*$/;
+
+export function isAscii(prompt: string): boolean {
+  return ASCII_ONLY.test(prompt);
+}
+
+function scriptLang(prompt: string): string | null {
+  if (/[\u0900-\u097F]/.test(prompt)) return "hi"; // Devanagari (Hindi/Marathi)
+  if (/[\u0980-\u09FF]/.test(prompt)) return "bn"; // Bengali
+  if (/[\u0A00-\u0A7F]/.test(prompt)) return "pa"; // Punjabi
+  if (/[\u0A80-\u0AFF]/.test(prompt)) return "gu"; // Gujarati
+  if (/[\u0B00-\u0B7F]/.test(prompt)) return "or"; // Odia
+  if (/[\u0B80-\u0BFF]/.test(prompt)) return "ta"; // Tamil
+  if (/[\u0C00-\u0C7F]/.test(prompt)) return "te"; // Telugu
+  if (/[\u0C80-\u0CFF]/.test(prompt)) return "kn"; // Kannada
+  if (/[\u0D00-\u0D7F]/.test(prompt)) return "ml"; // Malayalam
+  if (/[\u0600-\u06FF]/.test(prompt)) return "ar"; // Arabic
+  if (/[\u0400-\u04FF]/.test(prompt)) return "ru"; // Russian
+  if (/[\u4E00-\u9FFF]/.test(prompt)) return "zh-CN"; // Chinese
+  if (/[\u3040-\u30FF]/.test(prompt)) return "ja"; // Japanese
+  if (/[\uAC00-\uD7AF]/.test(prompt)) return "ko"; // Korean
+  return null;
+}
+
+async function viaMyMemory(prompt: string): Promise<string | null> {
+  const src = scriptLang(prompt);
+  if (!src) return null;
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+      prompt
+    )}&langpair=${src}|en`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000), cache: "no-store" });
+    if (!res.ok) return null;
+    const j = await res.json();
+    const t = j?.responseData?.translatedText;
+    if (typeof t === "string" && t.trim()) return t.trim();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function viaPollinationsText(prompt: string): Promise<string | null> {
+  try {
+    const instr = `Translate the text below into English. Reply with only the English translation, nothing else.\n\n${prompt}`;
+    const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(instr)}`, {
+      signal: AbortSignal.timeout(12000),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const raw = (await res.text()).trim();
+    if (!raw) return null;
+    const line = raw.split("\n").map((s) => s.trim()).filter(Boolean)[0] ?? "";
+    return line.replace(/^["'`]+|["'`]+$/g, "").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Translate any script to English. Falls back to the original if unavailable. */
+export async function translateToEnglish(prompt: string): Promise<string> {
+  if (isAscii(prompt)) return prompt;
+  return (await viaMyMemory(prompt)) ?? (await viaPollinationsText(prompt)) ?? prompt;
+}
+
 export async function tryHuggingFace(
   prompt: string,
   submitMs = 8000,

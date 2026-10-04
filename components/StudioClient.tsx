@@ -386,9 +386,16 @@ export default function StudioClient({
 
         if (data.status === "done") {
           addGeneratedImageAt(targetSide, data.url, label);
+          const translated =
+            data.usedPrompt &&
+            data.usedPrompt.trim().toLowerCase() !== label.trim().toLowerCase()
+              ? `Translated to English: “${data.usedPrompt}”. `
+              : "";
           setMessage({
             kind: "info",
-            text: `Generated and placed on the ${SIDE_LABELS[targetSide].toLowerCase()}. Generate as many as you like, on any side.`,
+            text: `${translated}Generated and placed on the ${SIDE_LABELS[
+              targetSide
+            ].toLowerCase()}. Generate as many as you like, on any side.`,
           });
           return;
         }
@@ -639,7 +646,9 @@ export default function StudioClient({
               <IconSpark /> Generate a design with AI
             </h2>
             <p className="mt-1 text-xs text-stone-500">
-              Describe it in a few words. It is added to the{" "}
+              Describe it in a few words —{" "}
+              <span className="font-medium text-stone-700">any language works</span> (we translate it to
+              English). It is added to the{" "}
               <span className="font-medium text-stone-700">{SIDE_LABELS[side]}</span> print area — switch
               side first to place it elsewhere.
             </p>
@@ -647,7 +656,7 @@ export default function StudioClient({
               className="input mt-3"
               rows={2}
               maxLength={300}
-              placeholder="For example: a bold tiger head logo in orange and black"
+              placeholder="Any language: e.g. एक लाल कार · ஒரு நீல நட்சத்திரம் · a bold tiger head logo"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
             />
